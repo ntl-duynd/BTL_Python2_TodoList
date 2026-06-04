@@ -14,7 +14,9 @@
             color:white;
             min-height:100vh;
         }
-
+        a {
+            text-decoration: none; /* Bỏ gạch chân */
+        }
         /* NAVBAR */
 
         .navbar-custom{
@@ -174,7 +176,24 @@
             color:#38bdf8;
             font-weight:600;
         }
+        .priority{
+            padding:6px 12px;
+            border-radius:20px;
+            font-weight:bold;
+        }
 
+        .high{
+            background:#dc2626;
+        }
+
+        .medium{
+            background:#facc15;
+            color:black;
+        }
+
+        .low{
+            background:#22c55e;
+        }
     </style>
 
 </head>
@@ -208,15 +227,15 @@
 
         </form>
 
-        <button class="menu-btn btn-group-new">
+        <a  href="/create_group" class="menu-btn btn-group-new">
             + New Group
-        </button>
+        </a>
 
-        <button class="menu-btn btn-mytask">
+        <a href="/user" class="menu-btn btn-mytask">
             📋 My Task
-        </button>
+        </a>
 
-        <a href="#" class="menu-btn btn-logout">
+        <a href="/logout" class="menu-btn btn-logout">
             Logout
         </a>
 
@@ -229,17 +248,17 @@
 <div class="container-custom">
 
     <div class="search-title">
-        🔍 Search Result : backend
+        🔍 Search Result : {{ keyword }}
     </div>
 
     <div class="mb-4">
 
         <span class="badge bg-primary fs-6">
-            2 Groups Found
+            {{ groups|length }} Groups Found
         </span>
 
         <span class="badge bg-success fs-6">
-            3 Tasks Found
+            {{ tasks|length }} Tasks Found
         </span>
 
     </div>
@@ -250,158 +269,101 @@
         👥 Group Found
     </div>
 
-    <div class="card-dark">
-
-        <h4>Backend Team</h4>
-
-        <p>
-            Join Code:
-            <strong>BACKEND001</strong>
-        </p>
-
-        <button class="join-btn">
-            Join Group
-        </button>
-
-    </div>
+    {% for group in groups %}
 
     <div class="card-dark">
 
-        <h4>Backend Development</h4>
+        <h4>{{ group.groupName }}</h4>
 
-        <p>
+        <!-- <p>
             Join Code:
-            <strong>DEVBACK123</strong>
-        </p>
+            <strong>{{ group.joinCode }}</strong>
+        </p> -->
 
-        <button class="join-btn">
-            Join Group
-        </button>
-
+        <a href="/join_group/{{ group.groupID }}">
+            <button class="join-btn">
+                Join Group
+            </button>
+        </a>
     </div>
-
+    {% endfor %}
     <!-- TASKS -->
 
     <div class="section-title">
         📋 Task Found
     </div>
 
-    <div class="card-dark">
+{% for task in tasks %}
 
-        <h4>Build Login API</h4>
+<div class="card-dark">
 
-        <p>
-            Xây dựng API đăng nhập bằng Flask và MySQL
-        </p>
+    <h4>{{ task.title }}</h4>
 
-        <div class="mb-3">
+    <p>
+        {{ task.description }}
+    </p>
 
+    <div class="mb-3">
+
+        {% if task.taskStatus == "TODO" %}
             <span class="status todo">
                 TODO
-            </span>
+                            </span>
 
-            <span class="level high">
-                HIGH
-            </span>
+                        {% elif task.taskStatus == "IN PROCESS" %}
+                            <span class="status process">
+                                IN PROCESS
+                            </span>
 
-        </div>
+                        {% elif task.taskStatus == "REVIEW" %}
+                            <span class="status review">
+                                REVIEW
+                            </span>
 
-        <p>
-            📅 Start Date:
-            01/06/2026
-        </p>
+                        {% else %}
+                            <span class="status done">
+                                DONE
+                            </span>
+                        {% endif %}
 
-        <p>
-            ⏰ Deadline:
-            08/06/2026
-        </p>
+        {% if task.taskLevel == 3 %}
+                            <span class="priority high">
+                                HIGH
+                            </span>
 
-        <p>
-            👥 Group:
-            <span class="group-name">
-                Backend Team
-            </span>
-        </p>
+                        {% elif task.taskLevel == 2 %}
+                            <span class="priority medium">
+                                MEDIUM
+                            </span>
 
+                        {% else %}
+                            <span class="priority low">
+                                LOW
+                            </span>
+                        {% endif %}
     </div>
 
-    <div class="card-dark">
+    <p>
+        📅 Start Date:
+        {{ task.startDate }}
+    </p>
 
-        <h4>Design Database</h4>
+    <p>
+        ⏰ Deadline:
+        {{ task.deadline }}
+    </p>
 
-        <p>
-            Thiết kế database cho hệ thống quản lý task
-        </p>
+    <p>
+        👥 Group:
+        <span class="group-name">
+            {{ task.groupName }}
+        </span>
+    </p>
 
-        <div class="mb-3">
+</div>
 
-            <span class="status review">
-                REVIEW
-            </span>
+{% endfor %}
 
-            <span class="level medium">
-                MEDIUM
-            </span>
-
-        </div>
-
-        <p>
-            📅 Start Date:
-            02/06/2026
-        </p>
-
-        <p>
-            ⏰ Deadline:
-            12/06/2026
-        </p>
-
-        <p>
-            👥 Group:
-            <span class="group-name">
-                Backend Team
-            </span>
-        </p>
-
-    </div>
-
-    <div class="card-dark">
-
-        <h4>Create Dashboard UI</h4>
-
-        <p>
-            Thiết kế giao diện dashboard chính
-        </p>
-
-        <div class="mb-3">
-
-            <span class="status process">
-                IN PROCESS
-            </span>
-
-            <span class="level low">
-                LOW
-            </span>
-
-        </div>
-
-        <p>
-            📅 Start Date:
-            03/06/2026
-        </p>
-
-        <p>
-            ⏰ Deadline:
-            15/06/2026
-        </p>
-
-        <p>
-            👥 Group:
-            <span class="group-name">
-                Frontend Team
-            </span>
-        </p>
-
-    </div>
 
 </div>
 

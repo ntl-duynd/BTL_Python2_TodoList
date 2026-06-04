@@ -143,21 +143,21 @@
 
 <nav class="navbar navbar-custom d-flex justify-content-between">
 
-    <a href="index.html" class="logo">
+    <a href="/" class="logo">
         ToDoListTogether
     </a>
 
     <div>
 
-        <a href="#" class="menu-btn btn-group-new text-decoration-none">
+        <a href="/new_group" class="menu-btn btn-group-new text-decoration-none">
             + New Group
         </a>
 
-        <a href="mytask.html" class="menu-btn btn-mytask text-decoration-none">
+        <a href="/mytask" class="menu-btn btn-mytask text-decoration-none">
             📋 My Task
         </a>
 
-        <a href="#" class="menu-btn btn-logout">
+        <a href="/logout" class="menu-btn btn-logout">
             Logout
         </a>
 
@@ -173,166 +173,163 @@
 
     <div class="card-form">
 
-        <form>
+        <form method="POST" action="/edit_task/{{ task.taskID }}">
 
-            <!-- TASK NAME -->
+    {% if error %}
+    <div class="alert alert-danger">
+        {{ error }}
+    </div>
+    {% endif %}
 
-            <div class="mb-4">
+    <!-- TASK NAME -->
 
-                <label>Task Name</label>
+    <div class="mb-4">
+
+        <label>Task Name</label>
+
+        <input
+            type="text"
+            name="title"
+            class="form-control"
+            value="{{ task.title }}">
+
+    </div>
+
+    <!-- DESCRIPTION -->
+
+    <div class="mb-4">
+
+        <label>Description</label>
+
+        <textarea
+            name="description"
+            class="form-control"
+            rows="4">{{ task.description }}</textarea>
+
+    </div>
+
+    <!-- START DATE & DEADLINE -->
+
+    <div class="row">
+
+        <div class="col-md-6 mb-4">
+
+            <label>Start Date</label>
+
+            <input
+                type="date"
+                name="startDate"
+                class="form-control"
+                value="{{ task.startDate.strftime('%Y-%m-%d') }}">
+
+        </div>
+
+        <div class="col-md-6 mb-4">
+
+            <label>Deadline</label>
+
+            <input
+                type="date"
+                name="deadline"
+                class="form-control"
+                value="{{ task.deadline.strftime('%Y-%m-%d') }}">
+        </div>
+
+    </div>
+
+    <!-- LEVEL -->
+
+    <div class="mb-4">
+
+        <label>Level</label>
+
+        <select
+            name="taskLevel"
+            class="form-select">
+
+            <option
+                value="HIGH"
+                {% if task.taskLevel == "HIGH" %}
+                selected
+                {% endif %}>
+                High
+            </option>
+
+            <option
+                value="MEDIUM"
+                {% if task.taskLevel == "MEDIUM" %}
+                selected
+                {% endif %}>
+                Medium
+            </option>
+
+            <option
+                value="LOW"
+                {% if task.taskLevel == "LOW" %}
+                selected
+                {% endif %}>
+                Low
+            </option>
+
+        </select>
+
+    </div>
+
+    <!-- ASSIGN TO -->
+
+    <div class="mb-4">
+
+        <label>Assign To</label>
+
+        <div class="member-box">
+
+            <div class="member-item">
 
                 <input
-                    type="text"
-                    name="taskName"
-                    class="form-control"
-                    value="Build Login API">
+                    type="checkbox"
+                    name="assignedUsers"
+                    value="ALL">
+
+                ALL MEMBERS
 
             </div>
 
-            <!-- DESCRIPTION -->
+            <hr>
 
-            <div class="mb-4">
+            {% for m in members %}
 
-                <label>Description</label>
+            <div class="member-item">
 
-                <textarea
-                    name="description"
-                    class="form-control"
-                    rows="4">Xây dựng API đăng nhập bằng Flask và MySQL</textarea>
+                <input
+                    type="checkbox"
+                    name="assignedUsers"
+                    value="{{ m.userID }}"
+                    {% if m.userID in assigned_users %}
+                    checked
+                    {% endif %}
+                >
 
-            </div>
-
-            <!-- START DATE & DEADLINE -->
-
-            <div class="row">
-
-                <div class="col-md-6 mb-4">
-
-                    <label>Start Date</label>
-
-                    <input
-                        type="date"
-                        name="startDate"
-                        class="form-control"
-                        value="2026-06-01">
-
-                </div>
-
-                <div class="col-md-6 mb-4">
-
-                    <label>Deadline</label>
-
-                    <input
-                        type="date"
-                        name="deadline"
-                        class="form-control"
-                        value="2026-06-08">
-
-                </div>
+                {{ m.userName }}
 
             </div>
 
-            <!-- LEVEL -->
+            {% endfor %}
 
-            <div class="mb-4">
+        </div>
 
-                <label>Level</label>
+    </div>
 
-                <select
-                    name="level"
-                    class="form-select">
+    <!-- BUTTON -->
 
-                    <option value="High" selected>
-                        High
-                    </option>
+    <button
+        type="submit"
+        class="btn-update">
 
-                    <option value="Medium">
-                        Medium
-                    </option>
+        Update Task
 
-                    <option value="Low">
-                        Low
-                    </option>
+    </button>
 
-                </select>
-
-            </div>
-
-            <!-- ASSIGN TO -->
-
-            <div class="mb-4">
-
-                <label>Assign To</label>
-
-                <div class="member-box">
-
-                    <div class="member-item">
-                        <input
-                            type="checkbox"
-                            name="allMembers">
-
-                        ALL MEMBERS
-                    </div>
-
-                    <hr>
-
-                    <div class="member-item">
-
-                        <input
-                            type="checkbox"
-                            name="assignee"
-                            value="1"
-                            checked>
-
-                        Duy
-
-                    </div>
-
-                    <div class="member-item">
-
-                        <input
-                            type="checkbox"
-                            name="assignee"
-                            value="2">
-
-                        Nam
-
-                    </div>
-
-                    <div class="member-item">
-
-                        <input
-                            type="checkbox"
-                            name="assignee"
-                            value="3"
-                            checked>
-
-                        Minh
-
-                    </div>
-
-                    <div class="member-item">
-
-                        <input
-                            type="checkbox"
-                            name="assignee"
-                            value="4">
-
-                        Long
-
-                    </div>
-
-                </div>
-
-            </div>
-
-            <!-- BUTTON -->
-
-            <button type="submit" class="btn-update">
-                Update Task
-            </button>
-
-        </form>
+</form>
 
     </div>
 

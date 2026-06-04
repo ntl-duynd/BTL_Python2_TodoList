@@ -292,6 +292,7 @@ def userTask():
     select 
         t.*,
         g.groupName,
+        g.groupID,
         u.userName as createdByName
     from taskassignments
     join tasks t on taskassignments.taskID = t.taskID
@@ -495,34 +496,19 @@ def insideGroup(groupID):
 
     group = cursor.fetchone()
 
-    # Các thành viên trong group
-    # cursor.execute(
-    #     """
-    #     SELECT
-    #         u.userID,
-    #         u.userName,
-    #         gm.isGroupAdmin
-    #     FROM groupmembers gm
-    #     JOIN users u
-    #         ON gm.userID = u.userID
-    #     WHERE gm.groupID = %s
-    #     ORDER BY u.userName
-    #     """,
-    #     (groupID,)
-    # )
     cursor.execute(
         """
-        SELECT DISTINCT
+        SELECT 
             gm.groupID,
-            gm.userID,
-            gm.userID as idAdmin,
-            g.groupName,
-            g.joinCode,
+            g.groupName,  
+            gm2.userID, 
+            gm.userID as idAdmin, 
             u.userName
-        FROM groupmembers gm
+        FROM groupmembers AS gm
         JOIN groups g ON g.groupID = gm.groupID
-        JOIN users u ON gm.userID = u.userID
-        WHERE gm.groupID = %s AND gm.isGroupAdmin = 1;
+        JOIN groupmembers as gm2 ON gm2.groupID = gm.groupID
+        JOIN users u ON gm2.userID = u.userID
+        WHERE gm.isGroupAdmin = 1 and gm.groupID = %s ;
         """,
         (groupID,)
     )
@@ -552,7 +538,514 @@ def insideGroup(groupID):
         tasks=tasks
     )
 
+@app.route("/changeStatusTask/<int:taskID>/<int:new_status>", methods=["GET", "POST"])
+def changeStatusTask(taskID, new_status):
+    if "userID" not in session:
+        return redirect(url_for("login"))
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+    # Lấy thông tin task
+    cursor.execute(
+        """
+        SELECT *
+        FROM tasks
+        WHERE taskID = %s
+        """,
+        (taskID,)
+    )
+    task = cursor.fetchone()
+    if new_status == 1: # Accept review hoặc next status
+        if task["taskStatus"] == "TODO":
+            new_status = "IN PROCESS"
+        elif task["taskStatus"] == "IN PROCESS":
+            new_status = "REVIEW"
+        elif task["taskStatus"] == "REVIEW":
+            new_status = "DONE"
+        else:
+            new_status = "DONE"
+    elif new_status == 2: # Reject review hoặc ReWork
+        if task["taskStatus"] == "REVIEW":
+            new_status = "IN PROCESS"
+        elif task["taskStatus"] == "DONE":
+            new_status = "IN PROCESS"
+        else:
+            new_status = task["taskStatus"]
+    # Cập nhật trạng thái mới cho task
+    cursor.execute(
+        """
+        UPDATE tasks
+        SET taskStatus = %s
+        WHERE taskID = %s
+        """,
+        (
+            new_status,
+            taskID
+        )
+    )
+    conn.commit()
+    cursor.close()
+    conn.close()
+    return redirect(url_for("index"))
 
+@app.route("/make_admin/<int:userID>/<int:groupID>")
+def makeAdmin(userID, groupID):
+
+    if "userID" not in session:
+        return redirect(url_for("login"))
+
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    sql_upadateAdmin_groupmembers = """
+        UPDATE groupmembers
+        SET isGroupAdmin = 1
+        WHERE groupID = %s
+        AND userID = %s
+    """
+    # Cập nhật quyền admin cho user
+    cursor.execute(
+        sql_upadateAdmin_groupmembers,
+        (
+            groupID,
+            userID
+        )
+    )
+    sqp_delete_my_admin = """
+        UPDATE groupmembers
+        SET isGroupAdmin = 0
+        WHERE groupID = %s
+        AND userID = %s
+    """
+    # Nếu tự cấp quyền admin cho chính mình thì hạ quyền admin của mình
+    cursor.execute(
+        sqp_delete_my_admin,
+        (
+            groupID,
+            session["userID"]
+        )
+    )
+
+    conn.commit()
+
+    cursor.close()
+    conn.close()
+
+    return redirect(
+        url_for(
+            "insideGroup",
+            groupID=groupID
+        )
+    )
+
+@app.route("/kick_member/<int:userID>/<int:groupID>")
+def kickMember(userID, groupID):
+
+    if "userID" not in session:
+        return redirect(url_for("login"))
+
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    sql_kick_member = """
+        DELETE FROM groupmembers
+        WHERE groupID = %s
+        AND userID = %s
+    """
+    # Xóa member khỏi nhóm
+    cursor.execute(
+        sql_kick_member,
+        (
+            groupID,
+            userID
+        )
+    )
+    delete_tasks_of_kicked_member = """
+        DELETE ta FROM taskassignments ta
+        JOIN tasks t ON ta.taskID = t.taskID
+        WHERE ta.userID = %s
+    """
+    cursor.execute(
+        delete_tasks_of_kicked_member,
+        (userID,)
+    )
+    conn.commit()
+
+    cursor.close()
+    conn.close()
+
+    return redirect(
+        url_for(
+            "insideGroup",
+            groupID=groupID
+        )
+    )
+@app.route("/delete_task/<int:taskID>")
+def deleteTask(taskID):
+
+    if "userID" not in session:
+        return redirect(url_for("login"))
+
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    cursor.execute(
+        """
+        DELETE FROM tasks
+        WHERE taskID = %s
+        """,
+        (taskID,)
+    )
+    cursor.execute(
+        """
+        DELETE FROM taskassignments
+        WHERE taskID = %s
+        """,
+        (taskID,)
+    )
+
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    return redirect(url_for("index"))
+
+@app.route("/edit_task/<int:taskID>", methods=["GET", "POST"])
+def editTask(taskID):
+
+    if "userID" not in session:
+        return redirect(url_for("login"))
+
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    # Lấy thông tin task
+    cursor.execute("""
+        SELECT *
+        FROM tasks
+        WHERE taskID = %s
+    """, (taskID,))
+
+    task = cursor.fetchone()
+
+    if not task:
+        cursor.close()
+        conn.close()
+        return "Task không tồn tại"
+
+    # Lấy danh sách thành viên trong group
+    cursor.execute("""
+        SELECT
+            u.userID,
+            u.userName
+        FROM groupmembers gm
+        JOIN users u
+            ON gm.userID = u.userID
+        WHERE gm.groupID = %s
+    """, (task["groupID"],))
+
+    members = cursor.fetchall()
+
+    # Lấy danh sách người đang được giao task
+    cursor.execute("""
+        SELECT userID
+        FROM taskassignments
+        WHERE taskID = %s
+    """, (taskID,))
+
+    assigned_users = [
+        row["userID"]
+        for row in cursor.fetchall()
+    ]
+
+    # ======================
+    # GET
+    # ======================
+    if request.method == "GET":
+
+        cursor.close()
+        conn.close()
+
+        return render_template(
+            "edit_task.html",
+            task=task,
+            members=members,
+            assigned_users=assigned_users
+        )
+
+    # ======================
+    # POST
+    # ======================
+
+    title = request.form["title"]
+    description = request.form["description"]
+    taskLevel = request.form["taskLevel"]
+    startDate = request.form["startDate"]
+    deadline = request.form["deadline"]
+
+    assignedUsers = request.form.getlist("assignedUsers")
+
+    # Validate
+    if title.strip() == "":
+        error = "Tiêu đề không được để trống"
+
+        return render_template(
+            "edit_task.html",
+            task=task,
+            members=members,
+            assigned_users=assigned_users,
+            error=error
+        )
+
+    if description.strip() == "":
+        error = "Mô tả không được để trống"
+
+        return render_template(
+            "edit_task.html",
+            task=task,
+            members=members,
+            assigned_users=assigned_users,
+            error=error
+        )
+
+    if startDate == "" or deadline == "":
+        error = "Ngày bắt đầu và hạn chót không được để trống"
+
+        return render_template(
+            "edit_task.html",
+            task=task,
+            members=members,
+            assigned_users=assigned_users,
+            error=error
+        )
+
+    if startDate > deadline:
+        error = "Ngày bắt đầu phải trước hạn chót"
+
+        return render_template(
+            "edit_task.html",
+            task=task,
+            members=members,
+            assigned_users=assigned_users,
+            error=error
+        )
+
+    if len(assignedUsers) == 0:
+        error = "Vui lòng chọn ít nhất một người"
+
+        return render_template(
+            "edit_task.html",
+            task=task,
+            members=members,
+            assigned_users=assigned_users,
+            error=error
+        )
+
+    # Nếu chọn ALL MEMBERS
+    if "ALL" in assignedUsers:
+
+        cursor.execute("""
+            SELECT userID
+            FROM groupmembers
+            WHERE groupID = %s
+        """, (task["groupID"],))
+
+        assignedUsers = [
+            str(row["userID"])
+            for row in cursor.fetchall()
+        ]
+
+    # Update task
+    cursor.execute("""
+        UPDATE tasks
+        SET
+            title = %s,
+            description = %s,
+            taskLevel = %s,
+            startDate = %s,
+            deadline = %s
+        WHERE taskID = %s
+    """, (
+        title,
+        description,
+        taskLevel,
+        startDate,
+        deadline,
+        taskID
+    ))
+
+    # Xóa assignment cũ
+    cursor.execute("""
+        DELETE FROM taskassignments
+        WHERE taskID = %s
+    """, (taskID,))
+
+    # Thêm assignment mới
+    sqlAssign = """
+    INSERT INTO taskassignments(
+        taskID,
+        userID,
+        assignedAt
+    )
+    VALUES(
+        %s,
+        %s,
+        NOW()
+    )
+    """
+
+    for userID in assignedUsers:
+
+        cursor.execute(
+            sqlAssign,
+            (
+                taskID,
+                userID
+            )
+        )
+
+    conn.commit()
+
+    cursor.close()
+    conn.close()
+
+    return redirect(
+        url_for(
+            "index"
+        )
+    )
+
+@app.route("/search")
+def search():
+
+    if "userID" not in session:
+        return redirect(url_for("login"))
+
+    keyword = request.args.get("keyword", "").strip()
+
+    if keyword == "":
+        return redirect(url_for("index"))
+
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    # Tìm group
+    sqlGroup = """
+    SELECT *
+    FROM groups
+    WHERE groupName LIKE %s
+       OR joinCode LIKE %s
+    """
+
+    cursor.execute(
+        sqlGroup,
+        (
+            f"%{keyword}%",
+            f"%{keyword}%"
+        )
+    )
+
+    groups = cursor.fetchall()
+
+    # Tìm task
+    sqlTask = """
+    SELECT
+        t.*,
+        g.groupName
+    FROM tasks t
+    JOIN groups g
+        ON t.groupID = g.groupID
+    WHERE t.title LIKE %s
+       OR t.description LIKE %s
+    ORDER BY t.deadline
+    """
+
+    cursor.execute(
+        sqlTask,
+        (
+            f"%{keyword}%",
+            f"%{keyword}%"
+        )
+    )
+
+    tasks = cursor.fetchall()
+
+    cursor.close()
+    conn.close()
+
+    return render_template(
+        "search.html",
+        keyword=keyword,
+        groups=groups,
+        tasks=tasks
+    )
+
+
+@app.route("/join_group/<int:groupID>")
+def join(groupID):
+    if "userID" not in session:
+        return redirect(url_for("login"))
+
+    userID = session["userID"]
+
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    # Kiểm tra đã tham gia chưa
+    cursor.execute(
+        """
+        SELECT *
+        FROM groupmembers
+        WHERE groupID = %s
+        AND userID = %s
+        """,
+        (groupID, userID)
+    )
+
+    member = cursor.fetchone()
+
+    if member:
+        cursor.close()
+        conn.close()
+
+        return redirect(
+            url_for(
+                "group",
+                groupID=groupID
+            )
+        )
+
+    # Thêm vào nhóm
+    cursor.execute(
+        """
+        INSERT INTO groupmembers(
+            groupID,
+            userID,
+            isGroupAdmin,
+            joinDate
+        )
+        VALUES(
+            %s,
+            %s,
+            0,
+            NOW()
+        )
+        """,
+        (
+            groupID,
+            userID
+        )
+    )
+
+    conn.commit()
+
+    cursor.close()
+    conn.close()
+
+    return redirect(
+        url_for(
+            "index"
+        )
+    )
 
 
 if __name__ == "__main__":

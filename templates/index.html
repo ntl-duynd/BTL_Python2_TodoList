@@ -207,16 +207,17 @@
     <form action="/search" method="GET" class="d-flex me-3">
 
         <input
-            type="text"
-            name="keyword"
-            class="form-control"
-            placeholder="Search task..."
-        >
-        <button
-            type="submit"
-            class="btn btn-secondary ms-2">
-            🔍
-        </button>
+                type="text"
+                name="keyword"
+                class="form-control"
+                placeholder="Search task or group..."
+                style="width:250px;">
+
+            <button
+                type="submit"
+                class="btn btn-secondary ms-2">
+                🔍
+            </button>
 
     </form>
 
@@ -339,13 +340,40 @@
                     </td>
 
                     <td>
-
-                        <a href="/task/{{ task.taskID }}">
-                            <button class="btn-next">
-                                Change Status
+                        {%if group.isGroupAdmin == 1%}
+                            {% if task.taskStatus == "REVIEW"%}
+                            <a href="/changeStatusTask/{{ task.taskID }}/1">
+                                <button class="btn-next" style="background:#37f937;">
+                                    Accept review
+                                </button>
+                            </a>
+                            <a href="/changeStatusTask/{{ task.taskID }}/2">
+                                <button class="btn-next" style="background:#ef4444;">
+                                    Reject review
+                                </button>
+                            </a>
+                            {%elif task.taskStatus != "REVIEW" and task.taskStatus != "DONE"%}
+                            <a href="/changeStatusTask/{{ task.taskID }}/1">
+                                <button class="btn-next">
+                                    Next status
+                                </button>
+                            </a>
+                            {% elif task.taskStatus == "DONE"%}
+                            <a href="/changeStatusTask/{{ task.taskID }}/2">
+                                <button class="btn-next"style="background:#ef44a8;">
+                                    ReWork
+                                </button>
+                            </a>
+                            {%elif task.taskStatus == "REVIEW"%}
+                            <button class="btn-next"style="background:#37f937;">
+                                    Reviewing
                             </button>
-                        </a>
-
+                            {%else%}
+                            <button class="btn-next"style="background:#ef4444;">
+                                    MayBe Done :>
+                            </button>
+                            {% endif %}
+                        {% endif %}
                     </td>
 
                     {% if group.isGroupAdmin %}

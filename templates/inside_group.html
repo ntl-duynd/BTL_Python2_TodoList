@@ -265,17 +265,36 @@ body{
                 <span class="member-name">
                     {{ m.userName }}
                 </span>
-                <!-- {% if m.idAdmin == session['userID'] %}
+                {% if m.userID == m.idAdmin %}
                 <span class="admin-badge">
                     ADMIN
                 </span>
-                {% endif %} -->
+                {% endif %}
+                {% if m.userID == session['userID'] %}
+                <span class="admin-badge" style="background:#2317cd;">
+                    YOU
+                </span>
+                {% endif %}
+            </div>
+            <div class="member-actions">
+            <!-- Action of admin    -->
+                {% if m.idAdmin == session['userID'] %}
+                    {% if m.userID != session['userID'] %}
+                        <a href="/make_admin/{{ m.userID }}/{{ group.groupID }}" class="btn-admin">
+                            Make Admin
+                        </a>
+                        <a href="/kick_member/{{ m.userID }}/{{ group.groupID }}" class="btn-kick">
+                            Kick
+                        </a>
+                    {% endif %}
+                {% endif %}
+
             </div>
         </div>
 
     </div>
     {% endfor %}
-
+    
 
     <!-- TASKS -->
 
@@ -327,17 +346,17 @@ body{
     {% endfor %}
     <!-- FOOTER ACTION -->
 
-    <div class="bottom-actions">
+    <!-- <div class="bottom-actions">
 
-        <a href="#" class="btn-out">
+        <a href="/out_group/{{ group.groupID }}" class="btn-out">
             Out Group
         </a>
 
-        <a href="#" class="btn-delete-group">
+        <a href="/delete_group/{{ group.groupID }}" class="btn-delete-group">
             Delete Group
         </a>
 
-    </div>
+    </div> -->
 
 </div>
 

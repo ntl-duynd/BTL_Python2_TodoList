@@ -226,22 +226,6 @@
 
     <div class="d-flex align-items-center">
 
-        <form class="d-flex me-3">
-
-            <input
-                type="text"
-                class="form-control"
-                placeholder="Search task or group..."
-                style="width:250px;">
-
-            <button
-                class="btn btn-secondary ms-2">
-
-                🔍
-
-            </button>
-
-        </form>
 
         <a class="menu-btn btn-group-new" href="/create_group">
             + New Group
@@ -273,7 +257,7 @@
 
     <!-- FILTER -->
 
-    <div class="filter-section">
+    <!-- <div class="filter-section">
 
         <a href="/tasks?status=all">
             <button class="btn btn-primary">
@@ -305,14 +289,14 @@
             </button>
         </a>
 
-    </div>
+    </div> -->
     <!-- TASKS OUTPUT -->
      {% for task in tasks %}
         <div class="task-card">
             <h4>{{ task.title }}</h4>
-            <p class="group-name">
+            <a href="/group/{{ task.groupID }}" class="group-name">
                 {{ task.groupName }}
-            </p>
+            </a>
 
             <p style="color:#eaff01; font-weight: bold;">
                  {{ task.description }}
@@ -364,9 +348,6 @@
             <p>
                 📅 {{ task.startDate }} → {{ task.deadline }}
             </p>
-            <button class="btn-next">
-                Change Status
-            </button>
         </div>
     {% endfor %}
     {% if tasks|length == 0 %}
