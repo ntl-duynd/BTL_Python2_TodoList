@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tạo Group</title>
+
+<style>
+
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+font-family:Segoe UI,sans-serif;
+}
+
+body{
+background:#0b1120;
+display:flex;
+justify-content:center;
+align-items:center;
+min-height:100vh;
+color:white;
+}
+
+.container{
+width:600px;
+background:#111827;
+padding:30px;
+border-radius:15px;
+border:1px solid #1f2937;
+}
+
+h2{
+margin-bottom:25px;
+}
+
+.form-group{
+margin-bottom:20px;
+display:flex;
+flex-direction:column;
+}
+
+label{
+margin-bottom:8px;
+color:#9ca3af;
+}
+
+input,
+textarea{
+background:#0f172a;
+border:1px solid #374151;
+padding:12px;
+border-radius:8px;
+color:white;
+}
+
+textarea{
+resize:none;
+}
+
+.actions{
+text-align:right;
+}
+
+button{
+background:#10b981;
+border:none;
+padding:12px 25px;
+color:white;
+border-radius:8px;
+cursor:pointer;
+}
+
+</style>
+
+</head>
+<body>
+
+<div class="container">
+
+<h2>📁 Tạo Group Mới</h2>
+
+<form action="/create_group" method="POST">
+
+<div class="form-group">
+<label>Tên Group</label>
+<input type="text" name="groupName" placeholder="Nhập tên group..." required>
+</div>
+
+<div class="actions">
+<button>
+Tạo Group
+</button>
+</div>
+
+</form>
+
+</div>
+
+</body>
+</html>
