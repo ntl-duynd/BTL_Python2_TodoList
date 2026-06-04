@@ -260,39 +260,17 @@ body{
 
    {% for m in members %}
     <div class="card-dark">
-
         <div class="member-row">
-
             <div>
-
                 <span class="member-name">
-                    {{ m.userName }} - {{ session['userID'] }}
+                    {{ m.userName }}
                 </span>
-                {% if m.isGroupAdmin == 1 %}
+                <!-- {% if m.idAdmin == session['userID'] %}
                 <span class="admin-badge">
                     ADMIN
                 </span>
-                {% endif %}
+                {% endif %} -->
             </div>
-
-            <div class="member-actions">
-            <!--     -->
-                {% if m.idAdmin == m.userID %}
-                <a href="#" class="btn-admin">
-                    Remove Admin
-                </a>
-                {% else %}
-                <a href="#" class="btn-admin">
-                    Make Admin
-                </a>
-                {% endif %}
-
-                <a href="#" class="btn-kick">
-                    Kick
-                </a>
-
-            </div>
-
         </div>
 
     </div>
