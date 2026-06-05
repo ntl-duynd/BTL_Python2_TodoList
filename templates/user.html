@@ -257,39 +257,39 @@
 
     <!-- FILTER -->
 
-    <!-- <div class="filter-section">
+    <div class="filter-section">
 
-        <a href="/tasks?status=all">
+        <a href="/user">
             <button class="btn btn-primary">
                 All
             </button>
         </a>
 
-        <a href="/tasks?status=todo">
+        <a href="/user/1">
             <button class="btn btn-secondary">
                 TODO
             </button>
         </a>
 
-        <a href="/tasks?status=process">
+        <a href="/user/2">
             <button class="btn btn-info">
                 In Process
             </button>
         </a>
 
-        <a href="/tasks?status=review">
+        <a href="/user/3">
             <button class="btn btn-warning">
                 Review
             </button>
         </a>
 
-        <a href="/tasks?status=done">
+        <a href="/user/4">
             <button class="btn btn-success">
                 Done
             </button>
         </a>
 
-    </div> -->
+    </div>
     <!-- TASKS OUTPUT -->
      {% for task in tasks %}
         <div class="task-card">
@@ -354,7 +354,7 @@
 
     <div class="alert alert-dark text-center">
 
-        Bạn chưa được giao task nào
+        Bạn chưa được giao hoặc không có task trong trạng thái này
 
     </div>
 

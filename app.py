@@ -66,12 +66,17 @@ def index():
         cursor.execute(
             """
             SELECT
-                t.*
-            FROM tasks t
+                t.*,
+                IFNULL(sct.userID, 0) as taskforUser
+            FROM tasks AS t
+            LEFT JOIN (
+            	SELECT taskID, userID
+                FROM taskassignments
+                WHERE userID = %s
+            ) as sct on sct.taskID = t.taskID
             WHERE t.groupID = %s
-            ORDER BY t.deadline
             """,
-            (group["groupID"],)
+            (userID,group["groupID"],)
         )
 
         tasks = cursor.fetchall()
@@ -283,7 +288,7 @@ def create_group():
     return redirect(url_for("index"))
 
 
-@app.route("/user", methods=["GET", "POST"])
+@app.route("/user")
 def userTask():
     if "userID" not in session:
         return redirect(url_for("login"))
@@ -304,6 +309,45 @@ def userTask():
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
     cursor.execute(sql, (userID,))
+    tasks = cursor.fetchall()
+    cursor.close()
+    conn.close()
+    return render_template("user.html", tasks=tasks)
+
+
+
+
+@app.route("/user/<int:statusTask>")
+def userTask2(statusTask):
+    if "userID" not in session:
+        return redirect(url_for("login"))
+    
+    userID = session["userID"]
+
+    if(statusTask ==  1):
+        statusTask = "TODO"
+    elif(statusTask == 2):
+        statusTask = "IN PROCESS"
+    elif(statusTask == 3):
+        statusTask = "REVIEW"
+    else:
+        statusTask = "DONE"
+    sql = """
+    select 
+        t.*,
+        g.groupName,
+        g.groupID,
+        u.userName as createdByName
+    from taskassignments
+    join tasks t on taskassignments.taskID = t.taskID
+    join groups g on t.groupID = g.groupID
+    join users u on t.createdBy = u.userID
+    where taskassignments.userID = %s and t.taskStatus = %s
+    order by t.deadline
+    """
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute(sql, (userID,statusTask))
     tasks = cursor.fetchall()
     cursor.close()
     conn.close()
@@ -679,6 +723,50 @@ def kickMember(userID, groupID):
             groupID=groupID
         )
     )
+# Member Out
+@app.route("/menber_out/<int:userID>/<int:groupID>")
+def outMember(userID, groupID):
+
+    if "userID" not in session:
+        return redirect(url_for("login"))
+
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+
+    sql_kick_member = """
+        DELETE FROM groupmembers
+        WHERE groupID = %s
+        AND userID = %s
+    """
+    # Xóa member khỏi nhóm
+    cursor.execute(
+        sql_kick_member,
+        (
+            groupID,
+            userID
+        )
+    )
+    delete_tasks_of_kicked_member = """
+        DELETE ta FROM taskassignments ta
+        JOIN tasks t ON ta.taskID = t.taskID
+        WHERE ta.userID = %s
+    """
+    cursor.execute(
+        delete_tasks_of_kicked_member,
+        (userID,)
+    )
+    conn.commit()
+
+    cursor.close()
+    conn.close()
+
+    return redirect(
+        url_for(
+            "index",
+        )
+    )
+
+
 @app.route("/delete_task/<int:taskID>")
 def deleteTask(taskID):
 
@@ -980,8 +1068,8 @@ def search():
     )
 
 
-@app.route("/join_group/<int:groupID>")
-def join(groupID):
+@app.route("/join_group/<int:groupIDz>")
+def join(groupIDz):
     if "userID" not in session:
         return redirect(url_for("login"))
 
@@ -998,7 +1086,7 @@ def join(groupID):
         WHERE groupID = %s
         AND userID = %s
         """,
-        (groupID, userID)
+        (groupIDz, userID)
     )
 
     member = cursor.fetchone()
@@ -1009,8 +1097,8 @@ def join(groupID):
 
         return redirect(
             url_for(
-                "group",
-                groupID=groupID
+                "insideGroup",
+                groupID=groupIDz
             )
         )
 
@@ -1031,7 +1119,7 @@ def join(groupID):
         )
         """,
         (
-            groupID,
+            groupIDz,
             userID
         )
     )

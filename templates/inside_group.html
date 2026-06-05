@@ -287,6 +287,10 @@ body{
                             Kick
                         </a>
                     {% endif %}
+                {%elif session['userID'] == m.userID %}
+                <a href="/menber_out/{{ m.userID }}/{{ group.groupID }}" class="btn-kick">
+                            OutGroup
+                        </a>
                 {% endif %}
 
             </div>
@@ -346,17 +350,15 @@ body{
     {% endfor %}
     <!-- FOOTER ACTION -->
 
-    <!-- <div class="bottom-actions">
-
-        <a href="/out_group/{{ group.groupID }}" class="btn-out">
-            Out Group
-        </a>
-
-        <a href="/delete_group/{{ group.groupID }}" class="btn-delete-group">
+    <div class="bottom-actions">
+        <!-- <a href="/delete_group/{{ group.groupID }}" class="btn-delete-group">
+            Delete Group
+        </a> -->
+        <a href="#" class="btn-delete-group">
             Delete Group
         </a>
 
-    </div> -->
+    </div>
 
 </div>
 

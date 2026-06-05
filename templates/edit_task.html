@@ -220,7 +220,7 @@
                 type="date"
                 name="startDate"
                 class="form-control"
-                value="{{ task.startDate.strftime('%Y-%m-%d') }}">
+                value="{{ task.startDate.strftime('%Y-%m-%d') if task.startDate else '' }}">
 
         </div>
 
@@ -232,7 +232,7 @@
                 type="date"
                 name="deadline"
                 class="form-control"
-                value="{{ task.deadline.strftime('%Y-%m-%d') }}">
+                value="{{ task.deadline.strftime('%Y-%m-%d') if task.deadline else '' }}">
         </div>
 
     </div>

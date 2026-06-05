@@ -187,6 +187,14 @@
             background:#16a34a;
             transform:translateY(-2px);
         }
+
+        .admin-badge{
+            background:#f59e0b;
+            color:white;
+            padding:5px 10px;
+            border-radius:20px;
+            font-size:12px;
+        }
     </style>
 
 </head>
@@ -283,7 +291,7 @@
                 <tr>
 
                     <td>
-                        {{ task.title }}
+                        {{ task.title }}{% if group.isGroupAdmin != 1 and task.taskforUser == session['userID']%} <span class="admin-badge">This is your task </span>{%endif%}
                     </td>
 
                     <td>
@@ -340,8 +348,8 @@
                     </td>
 
                     <td>
-                        {%if group.isGroupAdmin == 1%}
-                            {% if task.taskStatus == "REVIEW"%}
+                        {%if group.isGroupAdmin == 1 or task.taskforUser == session["userID"]%}
+                            {% if task.taskStatus == "REVIEW" and group.isGroupAdmin == 1%}
                             <a href="/changeStatusTask/{{ task.taskID }}/1">
                                 <button class="btn-next" style="background:#37f937;">
                                     Accept review
@@ -358,7 +366,7 @@
                                     Next status
                                 </button>
                             </a>
-                            {% elif task.taskStatus == "DONE"%}
+                            {% elif task.taskStatus == "DONE" and group.isGroupAdmin == 1%}
                             <a href="/changeStatusTask/{{ task.taskID }}/2">
                                 <button class="btn-next"style="background:#ef44a8;">
                                     ReWork
